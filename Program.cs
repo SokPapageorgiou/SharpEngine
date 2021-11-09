@@ -8,6 +8,13 @@ namespace SharpEngine
 {
     class Program
     {
+        static float[] vertices = new float[]
+        {
+            -.5f, -.5f, 0f,
+            .5f, -.5f, 0f,
+            0f, .5f, 0f
+        };
+        
         static void Main(string[] args) {
             
             var window = CreatWindow();
@@ -17,8 +24,14 @@ namespace SharpEngine
             // engine rendering loop
             while (!Glfw.WindowShouldClose(window)) {
                 Glfw.PollEvents(); // react to window changes (position etc.)
+                glClearColor(0,0,0,1);
+                glClear(GL_COLOR_BUFFER_BIT);
                 glDrawArrays(GL_TRIANGLES, 0, 3);
                 glFlush();
+
+                vertices[4] += 0.0001f;
+                
+                UppdateBuffer();
             } 
         }
 
@@ -43,29 +56,29 @@ namespace SharpEngine
 
         private static unsafe void LoadTriangleIntoBuffer()
         {
-            float[] vertices = new float[]
-            {
-                -.5f, -.5f, 0f,
-                .5f, -.5f, 0f,
-                0f, .5f, 0f
-            };
 
             // load the vertices into a buffer
             var vertexArray = glGenVertexArray();
             var vertexBuffer = glGenBuffer();
             glBindVertexArray(vertexArray);
             glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-            unsafe
+            fixed (float* vertex = &vertices[0])
             {
-                fixed (float* vertex = &vertices[0])
-                {
-                    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertices.Length, vertex, GL_STATIC_DRAW);
-                }
-
-                glVertexAttribPointer(0, 3, GL_FLOAT, false, 3 * sizeof(float), NULL);
+                glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertices.Length, vertex, GL_STATIC_DRAW);
             }
 
+            glVertexAttribPointer(0, 3, GL_FLOAT, false, 3 * sizeof(float), NULL);
+            
+
             glEnableVertexAttribArray(0);
+        }
+
+        static unsafe void UppdateBuffer()
+        {
+            fixed (float* vertex = &vertices[0])
+            {
+                glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertices.Length, vertex, GL_STATIC_DRAW);
+            }
         }
 
         private static void CreateShaderProgram()
