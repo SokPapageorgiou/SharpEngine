@@ -10,9 +10,13 @@ namespace SharpEngine
     {
         static float[] vertices = new float[]
         {
-            -.5f, -.5f, 0f,
-            .5f, -.5f, 0f,
-            0f, .5f, 0f
+            -.1f, -.1f, 0f,
+            .1f, -.1f, 0f,
+            0f, .1f, 0f, 
+            //Second triangle
+            .4f, .4f, 0f,
+            .6f, .4f, 0f,
+            .5f, .6f, 0f
         };
 
         const int vertexX = 0;
@@ -31,9 +35,9 @@ namespace SharpEngine
                 ClearScreen();
                 Render();
 
-                for (int i = vertexY; i < vertices.Length; i += vertexSize)
+                for (int i = 0; i < vertices.Length; i ++)
                 {
-                    vertices[i] -= 0.0001f;
+                    vertices[i] *= 1.0001f;
                 }
                 
                 UppdateBuffer();
