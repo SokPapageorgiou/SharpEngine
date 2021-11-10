@@ -14,6 +14,9 @@ namespace SharpEngine
             .5f, -.5f, 0f,
             0f, .5f, 0f
         };
+
+        const int verticeX = 0;
+        const int verticesSize = 3;
         
         static void Main(string[] args) {
             
@@ -24,15 +27,28 @@ namespace SharpEngine
             // engine rendering loop
             while (!Glfw.WindowShouldClose(window)) {
                 Glfw.PollEvents(); // react to window changes (position etc.)
-                glClearColor(0,0,0,1);
-                glClear(GL_COLOR_BUFFER_BIT);
-                glDrawArrays(GL_TRIANGLES, 0, 3);
-                glFlush();
+                ClearScreen();
+                Render();
 
-                vertices[4] += 0.0001f;
+                for (int i = verticeX; i < vertices.Length; i += verticesSize)
+                {
+                    vertices[i] += 0.0001f;
+                }
                 
                 UppdateBuffer();
             } 
+        }
+
+        private static void Render()
+        {
+            glDrawArrays(GL_TRIANGLES, 0, vertices.Length / verticesSize);
+            glFlush();
+        }
+
+        private static void ClearScreen()
+        {
+            glClearColor(0, 0, 0, 1);
+            glClear(GL_COLOR_BUFFER_BIT);
         }
 
         private static Window CreatWindow()
@@ -67,7 +83,7 @@ namespace SharpEngine
                 glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertices.Length, vertex, GL_STATIC_DRAW);
             }
 
-            glVertexAttribPointer(0, 3, GL_FLOAT, false, 3 * sizeof(float), NULL);
+            glVertexAttribPointer(0, verticesSize, GL_FLOAT, false, verticesSize * sizeof(float), NULL);
             
 
             glEnableVertexAttribArray(0);
