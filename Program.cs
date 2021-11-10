@@ -15,8 +15,9 @@ namespace SharpEngine
             0f, .5f, 0f
         };
 
-        const int verticeX = 0;
-        const int verticesSize = 3;
+        const int vertexX = 0;
+        private const int vertexY = 1;
+        const int vertexSize = 3;
         
         static void Main(string[] args) {
             
@@ -30,9 +31,9 @@ namespace SharpEngine
                 ClearScreen();
                 Render();
 
-                for (int i = verticeX; i < vertices.Length; i += verticesSize)
+                for (int i = vertexY; i < vertices.Length; i += vertexSize)
                 {
-                    vertices[i] += 0.0001f;
+                    vertices[i] -= 0.0001f;
                 }
                 
                 UppdateBuffer();
@@ -41,7 +42,7 @@ namespace SharpEngine
 
         private static void Render()
         {
-            glDrawArrays(GL_TRIANGLES, 0, vertices.Length / verticesSize);
+            glDrawArrays(GL_TRIANGLES, 0, vertices.Length / vertexSize);
             glFlush();
         }
 
@@ -83,7 +84,7 @@ namespace SharpEngine
                 glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertices.Length, vertex, GL_STATIC_DRAW);
             }
 
-            glVertexAttribPointer(0, verticesSize, GL_FLOAT, false, verticesSize * sizeof(float), NULL);
+            glVertexAttribPointer(0, vertexSize, GL_FLOAT, false, vertexSize * sizeof(float), NULL);
             
 
             glEnableVertexAttribArray(0);
@@ -101,12 +102,12 @@ namespace SharpEngine
         {
             // create vertex shader
             var vertexShader = glCreateShader(GL_VERTEX_SHADER);
-            glShaderSource(vertexShader, File.ReadAllText("Shader/red-triangle.vert"));
+            glShaderSource(vertexShader, File.ReadAllText("Shader/screen-coordinates.vert"));
             glCompileShader(vertexShader);
 
             // create fragment shader
             var fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-            glShaderSource(fragmentShader, File.ReadAllText("Shader/red-triangle.frag"));
+            glShaderSource(fragmentShader, File.ReadAllText("Shader/green.frag"));
             glCompileShader(fragmentShader);
 
             // create shader program - rendering pipeline
