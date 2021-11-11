@@ -23,6 +23,38 @@ namespace SharpEngine
             this.y = y;
             this.z = 0;
         }
+
+        public static Vector operator +(Vector lhs, Vector rhs)
+        {
+            return new Vector(lhs.x + rhs.x, lhs.y + rhs.y, lhs.z + rhs.z);
+        }
+        
+        public static Vector operator -(Vector lhs, Vector rhs)
+        {
+            return new Vector(lhs.x - rhs.x, lhs.y - rhs.y, lhs.z - rhs.z);
+        }
+        
+        
+        public static Vector operator *(Vector v, float f)
+        {
+            return new Vector(v.x * f, v.y * f, v.z * f);
+        }
+        
+        public static Vector operator /(Vector v, float f)
+        {
+            return new Vector(v.x / f, v.y / f, v.z / f);
+        }
+
+        public static Vector Max(Vector v, Vector u)
+        {
+            return new Vector(MathF.Max(v.x, u.x), MathF.Max(v.y, u.y), MathF.Max(v.z, u.z));
+        }
+        
+        public static Vector Min(Vector v, Vector u)
+        {
+            return new Vector(MathF.Min(v.x, u.x), MathF.Min(v.y, u.y), MathF.Min(v.z, u.z));
+        }
+        
     }
     
     class Program
@@ -32,9 +64,9 @@ namespace SharpEngine
             new Vector(-.1f, -.1f),
             new Vector(.1f, -.1f),
             new Vector(0f, .1f),
-            new Vector( .4f, .4f),
-            new Vector(.6f, .4f),
-            new Vector(.5f, .6f)
+            // new Vector( .4f, .4f),
+            // new Vector(.6f, .4f),
+            // new Vector(.5f, .6f)
         };
 
         const int vertexSize = 3;
@@ -46,6 +78,10 @@ namespace SharpEngine
             CreateShaderProgram();
 
             // engine rendering loop
+            var direction = new Vector(0.0001f, 0.0001f, 0);
+            var multiplyer = 0.9999f;
+            float scale = 1f;
+            
             while (!Glfw.WindowShouldClose(window)) {
                 Glfw.PollEvents(); // react to window changes (position etc.)
                 ClearScreen();
@@ -53,12 +89,72 @@ namespace SharpEngine
 
                 for (var i = 0; i < vertices.Length; i ++)
                 {
-                    vertices[i].x += 0.0001f;
+                    vertices[i] += direction;
+                }
+
+                
+                //Find center of triangle
+
+                var min = vertices[0];
+                for (int i = 0; i < vertices.Length; i++)
+                {
+                    min = Vector.Min(min, vertices[i]);
+                }
+
+                var max = vertices[0];
+                for (int i = 0; i < vertices.Length; i++)
+                {
+                    min = Vector.Max(max, vertices[i]);
+                }
+
+                var center = (min + max) / 2;
+                
+                // Move all vertices towards center
+                for (int i = 0; i < vertices.Length; i++)
+                {
+                    vertices[i] -= center;
                 }
                 
+                // Scale
+                for (int i = 0; i < vertices.Length; i++)
+                {
+                    vertices[i] *= multiplyer;
+                }
+                
+                scale *= multiplyer;
+
+                if (scale <= 0.5f) multiplyer = 1.0001f;
+                else if (scale >= 1) multiplyer = 0.9999f;
+                
+
+                // Move all vertices back center
+                for (int i = 0; i < vertices.Length; i++)
+                {
+                    vertices[i] += center;
+                }
+
+                for (int i = 0; i < vertices.Length; i++)
+                {
+                    if (vertices[i].x  >= 1 && direction.x > 0 || vertices[i].x <= -1 && direction.x < 0)
+                    {
+                        direction.x *= -1;
+                        break;
+                    }
+                }
+
+                for (int i = 0; i < vertices.Length; i++)
+                {
+                    if (vertices[i].y  >= 1 && direction.y > 0 || vertices[i].y <= -1 && direction.y < 0)
+                    {
+                        direction.y *= -1;
+                        break;
+                    }
+                }
                 UppdateBuffer();
             } 
         }
+
+        
 
         private static void Render(Window window)
         {
@@ -115,7 +211,7 @@ namespace SharpEngine
         {
             fixed (Vector* vertex = &vertices[0])
             {
-                glBufferData(GL_ARRAY_BUFFER, sizeof(Vector) * vertices.Length, vertex, GL_DYNAMIC_DRAW);
+                glBufferData(GL_ARRAY_BUFFER, sizeof(Vector) * vertices.Length, vertex, GL_STATIC_DRAW);
             }
         }
 
