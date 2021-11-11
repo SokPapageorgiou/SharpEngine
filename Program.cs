@@ -1,69 +1,16 @@
-﻿using System;
-using System.IO;
-using System.Net;
+﻿using System.IO;
 using GLFW;
 using static OpenGL.Gl;
 
 namespace SharpEngine
 {
-    public struct Vector
-    {
-        public float x, y, z;
-
-        public Vector(float x, float y, float z)
-        {
-            this.x = x;
-            this.y = y;
-            this.z = z;
-        }
-
-        public Vector(float x, float y)
-        {
-            this.x = x;
-            this.y = y;
-            this.z = 0;
-        }
-
-        public static Vector operator +(Vector lhs, Vector rhs)
-        {
-            return new Vector(lhs.x + rhs.x, lhs.y + rhs.y, lhs.z + rhs.z);
-        }
-        
-        public static Vector operator -(Vector lhs, Vector rhs)
-        {
-            return new Vector(lhs.x - rhs.x, lhs.y - rhs.y, lhs.z - rhs.z);
-        }
-        
-        
-        public static Vector operator *(Vector v, float f)
-        {
-            return new Vector(v.x * f, v.y * f, v.z * f);
-        }
-        
-        public static Vector operator /(Vector v, float f)
-        {
-            return new Vector(v.x / f, v.y / f, v.z / f);
-        }
-
-        public static Vector Max(Vector v, Vector u)
-        {
-            return new Vector(MathF.Max(v.x, u.x), MathF.Max(v.y, u.y), MathF.Max(v.z, u.z));
-        }
-        
-        public static Vector Min(Vector v, Vector u)
-        {
-            return new Vector(MathF.Min(v.x, u.x), MathF.Min(v.y, u.y), MathF.Min(v.z, u.z));
-        }
-        
-    }
-    
     class Program
     {
-        static Vector[] vertices = new Vector[]
+        static Vertex[] vertices = new Vertex[]
         {
-            new Vector(-.1f, -.1f),
-            new Vector(.1f, -.1f),
-            new Vector(0f, .1f),
+            new Vertex(new Vector(-.1f, -.1f), Color.Red),
+            new Vertex(new Vector(.1f, -.1f), Color.Green),
+            new Vertex(new Vector(0f, .1f), Color.Blue),
             // new Vector( .4f, .4f),
             // new Vector(.6f, .4f),
             // new Vector(.5f, .6f)
@@ -79,7 +26,7 @@ namespace SharpEngine
 
             // engine rendering loop
             var direction = new Vector(0.0001f, 0.0001f, 0);
-            var multiplyer = 0.9999f;
+            var multiplyer = 0.999f;
             float scale = 1f;
             
             while (!Glfw.WindowShouldClose(window)) {
@@ -89,22 +36,22 @@ namespace SharpEngine
 
                 for (var i = 0; i < vertices.Length; i ++)
                 {
-                    vertices[i] += direction;
+                    vertices[i].position += direction;
                 }
 
                 
                 //Find center of triangle
 
-                var min = vertices[0];
+                var min = vertices[0].position;
                 for (int i = 0; i < vertices.Length; i++)
                 {
-                    min = Vector.Min(min, vertices[i]);
+                    min = Vector.Min(min, vertices[i].position);
                 }
 
-                var max = vertices[0];
+                var max = vertices[0].position;
                 for (int i = 0; i < vertices.Length; i++)
                 {
-                    min = Vector.Max(max, vertices[i]);
+                    min = Vector.Max(max, vertices[i].position);
                 }
 
                 var center = (min + max) / 2;
@@ -112,30 +59,30 @@ namespace SharpEngine
                 // Move all vertices towards center
                 for (int i = 0; i < vertices.Length; i++)
                 {
-                    vertices[i] -= center;
+                    vertices[i].position -= center;
                 }
                 
                 // Scale
                 for (int i = 0; i < vertices.Length; i++)
                 {
-                    vertices[i] *= multiplyer;
+                    vertices[i].position *= multiplyer;
                 }
                 
                 scale *= multiplyer;
 
-                if (scale <= 0.5f) multiplyer = 1.0001f;
-                else if (scale >= 1) multiplyer = 0.9999f;
+                if (scale <= 0.5f) multiplyer = 1.001f;
+                else if (scale >= 1) multiplyer = 0.999f;
                 
 
                 // Move all vertices back center
                 for (int i = 0; i < vertices.Length; i++)
                 {
-                    vertices[i] += center;
+                    vertices[i].position += center;
                 }
 
                 for (int i = 0; i < vertices.Length; i++)
                 {
-                    if (vertices[i].x  >= 1 && direction.x > 0 || vertices[i].x <= -1 && direction.x < 0)
+                    if (vertices[i].position.x  >= 1 && direction.x > 0 || vertices[i].position.x <= -1 && direction.x < 0)
                     {
                         direction.x *= -1;
                         break;
@@ -144,7 +91,7 @@ namespace SharpEngine
 
                 for (int i = 0; i < vertices.Length; i++)
                 {
-                    if (vertices[i].y  >= 1 && direction.y > 0 || vertices[i].y <= -1 && direction.y < 0)
+                    if (vertices[i].position.y  >= 1 && direction.y > 0 || vertices[i].position.y <= -1 && direction.y < 0)
                     {
                         direction.y *= -1;
                         break;
@@ -196,22 +143,23 @@ namespace SharpEngine
             var vertexBuffer = glGenBuffer();
             glBindVertexArray(vertexArray);
             glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-            fixed (Vector* vertex = &vertices[0])
+            fixed (Vertex* vertex = &vertices[0])
             {
-                glBufferData(GL_ARRAY_BUFFER, sizeof(Vector) * vertices.Length, vertex, GL_STATIC_DRAW);
+                glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * vertices.Length, vertex, GL_STATIC_DRAW);
             }
 
-            glVertexAttribPointer(0, vertexSize, GL_FLOAT, false, sizeof(Vector), NULL);
-            
+            glVertexAttribPointer(0, 3, GL_FLOAT, false, sizeof(Vertex), NULL);
+            glVertexAttribPointer(1, 4, GL_FLOAT, false, sizeof(Vertex), (void*)sizeof(Vector));
 
             glEnableVertexAttribArray(0);
+            glEnableVertexAttribArray(1);
         }
 
         static unsafe void UppdateBuffer()
         {
-            fixed (Vector* vertex = &vertices[0])
+            fixed (Vertex* vertex = &vertices[0])
             {
-                glBufferData(GL_ARRAY_BUFFER, sizeof(Vector) * vertices.Length, vertex, GL_STATIC_DRAW);
+                glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * vertices.Length, vertex, GL_STATIC_DRAW);
             }
         }
 
@@ -219,12 +167,12 @@ namespace SharpEngine
         {
             // create vertex shader
             var vertexShader = glCreateShader(GL_VERTEX_SHADER);
-            glShaderSource(vertexShader, File.ReadAllText("Shader/screen-coordinates.vert"));
+            glShaderSource(vertexShader, File.ReadAllText("Shader/position-color.vert"));
             glCompileShader(vertexShader);
 
             // create fragment shader
             var fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-            glShaderSource(fragmentShader, File.ReadAllText("Shader/green.frag"));
+            glShaderSource(fragmentShader, File.ReadAllText("Shader/vertex-color.frag"));
             glCompileShader(fragmentShader);
 
             // create shader program - rendering pipeline
